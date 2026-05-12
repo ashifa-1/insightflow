@@ -4,6 +4,8 @@ services:
     build: ./backend
     container_name: insightflow_backend
     command: python manage.py runserver 0.0.0.0:8000
+    env_file:
+    - .env
     volumes:
       - ./backend:/app
     ports:
