@@ -1,0 +1,34 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+db.sqlite3
+
+# Environment variables
+.env
+.env.*
+
+# Django static/media
+staticfiles/
+media/
+
+# Node
+node_modules/
+dist/
+
+# Git
+.git/
+.gitignore
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Redis
+dump.rdb
