@@ -1,272 +1,232 @@
-# Production-Ready Multi-Tenant Django Application with PostgreSQL
+# InsightFlow
 
-## Overview
+InsightFlow is a full-stack multi-tenant analytics dashboard built using Django, React, PostgreSQL, Redis, and Docker.
 
-This project implements and benchmarks two major multi-tenancy strategies used in modern SaaS architectures:
+The project demonstrates how modern SaaS applications handle:
+- workspace-based multi-tenancy
+- analytics event tracking
+- dashboard aggregation
+- Redis caching
+- protected frontend routes
+- scalable frontend/backend communication
+- containerized infrastructure
 
-1. Row-Level Security (RLS)
-2. Schema-per-Tenant Isolation
-
-The system was built using Django, PostgreSQL, Docker, and Redis. It demonstrates tenant-aware request handling, schema switching, benchmarking, indexing analysis, and performance comparisons between isolation strategies.
+This project was built as a production-style SaaS analytics platform inspired by tools like Mixpanel, PostHog, and Plausible.
 
 ---
 
-# Objective
+# Features
 
-The objective of this project is to:
+## Authentication
+- OAuth-ready authentication flow
+- Protected frontend routes
+- Login state management using React Context
 
-* Understand multi-tenancy architecture in backend systems
-* Implement tenant-aware data isolation strategies
-* Benchmark and compare performance trade-offs
-* Explore database-level isolation techniques in PostgreSQL
-* Analyze indexing impact on tenant-scoped queries
+## Multi-Tenancy
+- Workspace-based tenant isolation
+- Workspace-specific analytics
+- Dynamic workspace switching
+- Tenant-aware API architecture
+
+## Analytics Dashboard
+- Total event tracking
+- Top pages aggregation
+- Workspace analytics visualization
+- Time-series-ready architecture
+
+## Backend Features
+- Django REST Framework APIs
+- PostgreSQL relational modeling
+- Redis caching integration
+- Optimized aggregation queries
+- Workspace membership permissions
+
+## Frontend Features
+- React Router protected routes
+- React Query server-state management
+- Axios API integration
+- Recharts analytics visualization
+- Reusable component structure
+
+## Infrastructure
+- Dockerized backend
+- Dockerized frontend
+- PostgreSQL container
+- Redis container
+- Docker Compose orchestration
 
 ---
 
 # Tech Stack
 
-| Technology            | Purpose                       |
-| --------------------- | ----------------------------- |
-| Django                | Backend framework             |
-| Django REST Framework | API development               |
-| PostgreSQL            | Relational database           |
-| Redis                 | Caching service               |
-| Docker                | Containerization              |
-| Docker Compose        | Multi-container orchestration |
-| Python                | Core programming language     |
+## Backend
+- Django
+- Django REST Framework
+- PostgreSQL
+- Redis
+- django-redis
+
+## Frontend
+- React
+- React Router
+- React Query
+- Axios
+- Recharts
+- Vite
+
+## DevOps
+- Docker
+- Docker Compose
 
 ---
 
-# Project Architecture
+# System Architecture
 
-The project implements two tenant isolation approaches:
+The application follows a modern full-stack SaaS architecture:
 
-## 1. Row-Level Security (RLS)
+Frontend (React SPA)
+↓
+Django REST API
+↓
+PostgreSQL + Redis
 
-All tenants share the same database tables.
-Tenant data isolation is enforced through:
+### Architecture Flow
 
-* Tenant-aware middleware
-* Thread-local tenant context
-* Custom Django model managers
-* Automatic queryset filtering
-
-### Example
-
-A query such as:
-
-```python
-Project.objects.all()
-```
-
-automatically becomes:
-
-```sql
-SELECT * FROM app_project
-WHERE tenant_id = current_tenant;
-```
+- React handles the user interface and routing
+- Django REST Framework exposes API endpoints
+- PostgreSQL stores workspace and analytics data
+- Redis caches expensive analytics queries
+- Docker manages the entire application stack
 
 ---
 
-## 2. Schema-per-Tenant Isolation
+# Screenshots
 
-Each tenant receives a separate PostgreSQL schema.
+## Login Page
 
-Example:
-
-```text
-public
-schema_tenant_a
-schema_tenant_b
-```
-
-Tenant isolation is achieved using:
-
-```sql
-SET search_path TO tenant_schema;
-```
-
-This causes PostgreSQL to automatically query tenant-specific tables.
+![Login Page](./screenshots/loginpage.png)
 
 ---
 
-# Features Implemented
+## InsightFlow Workspace Dashboard
 
-## Part A - Row-Level Security
-
-### Implemented Features
-
-* Tenant model
-* Project model
-* Tenant middleware
-* Thread-local tenant context
-* Tenant-aware custom manager
-* Automatic queryset filtering
-* Tenant-scoped REST APIs
-* Request header based tenant resolution
-
-### Header-Based Tenant Resolution
-
-Example:
-
-```http
-X-Tenant-ID: tenant_a
-```
+![InsightFlow Dashboard](./screenshots/dashboard_insightflow.png)
 
 ---
 
-## Part B - Schema Isolation
+## Acme Workspace Dashboard
 
-### Implemented Features
+![Acme Dashboard](./screenshots/dashboard_acme.png)
 
-* PostgreSQL schema provisioning
-* Tenant schema creation command
-* Database router
-* Dynamic schema switching middleware
-* PostgreSQL search_path based isolation
+---
 
-### Schema Provisioning Command
+## Docker Containers Running
+
+![Docker Containers](./screenshots/docker_containers.png)
+
+---
+
+# Multi-Tenant Architecture
+
+Each workspace acts as an isolated tenant.
+
+All analytics events are associated with a specific workspace, ensuring tenant-level data isolation.
+
+Workspace-specific API endpoints:
 
 ```bash
-python manage.py provision_tenant tenant_a
-```
+GET /api/w/<workspace_slug>/dashboard/summary/
+````
 
-Creates:
-
-```text
-schema_tenant_a
-```
-
-inside PostgreSQL.
+The frontend dynamically switches workspaces and automatically reloads analytics data using React Query query keys.
 
 ---
 
-## Part C - Benchmarking
+# Redis Caching
 
-### Benchmarks Performed
+Dashboard summary responses are cached using Redis.
 
-* RLS without indexing
-* RLS with composite indexing
-* Schema isolation query benchmarking
-* search_path overhead measurement
-* PostgreSQL index size analysis
+### Cache Strategy
 
----
+* Cache key is workspace-specific
+* Expensive aggregation queries are cached
+* Cached summaries reduce database load
+* Cache timeout is set to 15 minutes
 
-# Benchmark Results
+Example cache key:
 
-## Final Results
-
-```json
-{
-  "rls_without_index": 0.006873132999317022,
-  "rls_with_index": 0.00314734700077679,
-  "schema_isolation_avg": 0.019940409333988402,
-  "search_path_overhead": 0.00031619347999367164,
-  "index_size": "328 kB"
-}
+```bash
+workspaces:{workspace_id}:dashboard_summary
 ```
 
 ---
 
-# Benchmark Analysis
+# Analytics Features
 
-## RLS Without Index
+The dashboard visualizes:
 
-The query performance was slower because PostgreSQL needed to scan a larger portion of the shared table.
+* total events
+* top pages
+* page view analytics
+* workspace-specific activity
 
----
-
-## RLS With Composite Index
-
-Adding a composite index on:
-
-```text
-(tenant_id, created_at)
-```
-
-significantly improved query performance.
-
-This demonstrates the importance of indexing in shared-table multi-tenant architectures.
+Charts are implemented using Recharts.
 
 ---
 
-## Schema Isolation
+# Dockerized Infrastructure
 
-Schema isolation introduced a small overhead because each benchmark cycle included:
+The project uses Docker Compose to orchestrate:
 
-* schema switching using SET search_path
-* namespace resolution
-* query execution
+* frontend container
+* backend container
+* PostgreSQL container
+* Redis container
 
-Although schema isolation is generally expected to perform very well due to smaller tenant-specific tables, the indexed RLS implementation performed faster in this benchmark because:
+This provides:
 
-* the RLS model used a composite index
-* schema benchmark tables did not use equivalent indexing
-* search_path switching overhead was included in timing
-
----
-
-## search_path Overhead
-
-The overhead of:
-
-```sql
-SET search_path
-```
-
-was extremely small.
-
-This shows that schema switching is lightweight and practical for many SaaS systems.
+* isolated development environments
+* reproducible builds
+* simplified setup process
 
 ---
 
-## Index Size
+# Project Structure
 
-The composite index consumed additional storage:
-
-```text
-328 kB
-```
-
-This reflects the common database trade-off:
-
-```text
-More storage -> Faster query performance
+```bash
+insightflow/
+│
+├── backend/
+├── frontend/
+├── screenshots/
+├── docker-compose.yml
+├── .env.example
+├── README.md
 ```
 
 ---
 
-# Trade-Off Comparison
+# Environment Variables
 
-| Strategy           | Advantages                                                | Disadvantages                           |
-| ------------------ | --------------------------------------------------------- | --------------------------------------- |
-| Row-Level Security | Simpler management, centralized schema, easier migrations | Requires careful indexing and filtering |
-| Schema Isolation   | Strong tenant separation, smaller tenant-specific tables  | More operational complexity             |
+Example `.env` configuration:
 
----
+```env
+DEBUG=True
 
-# When to Choose Each Strategy
+SECRET_KEY=your-secret-key
 
-## Choose Row-Level Security When:
+POSTGRES_DB=insightflow_db
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
 
-* tenant count is very high
-* centralized schema management is preferred
-* operational simplicity is important
-* application-level filtering is sufficient
-
----
-
-## Choose Schema Isolation When:
-
-* strong tenant isolation is required
-* enterprise customers demand separation
-* tenant-specific customizations are needed
-* security boundaries are critical
+REDIS_URL=redis://redis:6379/1
+```
 
 ---
 
-# How to Run the Project
+# Installation and Setup
 
 ## Clone Repository
 
@@ -277,7 +237,7 @@ cd insightflow
 
 ---
 
-## Start Containers
+## Start Application
 
 ```bash
 docker-compose up --build
@@ -285,57 +245,67 @@ docker-compose up --build
 
 ---
 
-## Apply Migrations
+## Backend URL
 
 ```bash
-docker-compose exec app python manage.py migrate
+http://localhost:8000
 ```
 
 ---
 
-## Run Server
+## Frontend URL
 
 ```bash
-docker-compose exec app python manage.py runserver 0.0.0.0:8000
+http://localhost:5173
 ```
 
 ---
 
-## Provision Tenant Schemas
+# Running Migrations
 
 ```bash
-docker-compose exec app python manage.py provision_tenant tenant_a
+docker-compose exec backend python manage.py migrate
 ```
 
 ---
 
-## Run Benchmarks
+# Create Superuser
 
 ```bash
-docker-compose exec app python manage.py run_benchmarks
+docker-compose exec backend python manage.py createsuperuser
+```
+
+---
+
+# Access Django Admin
+
+```bash
+http://localhost:8000/admin
+```
+
+---
+
+# API Endpoints
+
+## Dashboard Summary
+
+```bash
+GET /api/w/<workspace_slug>/dashboard/summary/
+```
+
+---
+
+## OAuth Simulation Endpoints
+
+```bash
+GET /api/auth/google/
+GET /api/auth/github/
 ```
 
 ---
 
 # Outcome
 
-This project successfully demonstrates:
+InsightFlow demonstrates a scalable multi-tenant analytics platform using modern full-stack technologies and production-style infrastructure patterns.
 
-* practical multi-tenancy implementation
-* tenant-aware request handling
-* PostgreSQL schema isolation
-* benchmarking and indexing analysis
-* SaaS backend architecture design
-* performance trade-off evaluation
-
-The implementation provides hands-on understanding of how modern scalable SaaS systems manage tenant isolation and query optimization.
-
----
-
-# Conclusion
-
-This project explored two major multi-tenancy strategies used in production-grade SaaS systems.
-
-The benchmarking results demonstrated that indexing plays a critical role in the performance of shared-table architectures. The project also showed that PostgreSQL schema switching introduces minimal overhead while providing stronger tenant separation.
-
-Both approaches have valid use cases depending on scalability requirements, operational complexity, and security expectations.
+The project combines backend engineering, frontend architecture, caching strategies, analytics visualization, and containerized infrastructure into a complete SaaS-style application.
