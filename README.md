@@ -271,8 +271,8 @@ More storage -> Faster query performance
 ## Clone Repository
 
 ```bash
-git clone https://github.com/ashifa-1/project-multitenancy
-cd project-multitenancy
+git clone https://github.com/ashifa-1/insightflow
+cd insightflow
 ```
 
 ---
