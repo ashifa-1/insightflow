@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 
 from .models import Workspace, Event
 from .permissions import IsWorkspaceMember
@@ -13,10 +13,7 @@ from .permissions import IsWorkspaceMember
 
 class DashboardSummaryView(APIView):
 
-    permission_classes = [
-        IsAuthenticated,
-        IsWorkspaceMember
-    ]
+    permission_classes = [AllowAny]
 
     def get(self, request, workspace_slug):
 
@@ -64,3 +61,13 @@ class DashboardSummaryView(APIView):
         )
 
         return Response(data)
+
+class OAuthLoginView(APIView):
+
+    permission_classes = [AllowAny]
+
+    def get(self, request, provider):
+
+        return Response({
+            'message': f'{provider} OAuth initiated'
+        })

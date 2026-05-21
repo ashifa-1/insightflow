@@ -1,11 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
-
 import { getDashboardSummary } from './api';
-
+import PageViewsChart from './PageViewsChart';
+import { useAuth } from '../auth/AuthContext';
 
 const DashboardSummary = ({
   workspaceSlug
 }) => {
+
+  const { logout } = useAuth();
 
   const {
     data,
@@ -28,35 +30,74 @@ const DashboardSummary = ({
   }
 
   if (isError) {
-    return <p>Error: {error.message}</p>;
+    return (
+      <p>
+        Error:
+        {' '}
+        {error.message}
+      </p>
+    );
   }
 
   return (
-    <div>
 
-      <h2>
-        {data.workspace}
-      </h2>
+    <div className="stats-card">
+
+      <div className="dashboard-header">
+
+        <h2>
+          {data.workspace}
+        </h2>
+
+        <button
+          className="logout-btn"
+          onClick={logout}
+        >
+          Logout
+        </button>
+
+      </div>
 
       <h3>
-        Total Events: {data.event_count}
+        Total Events:
+        {' '}
+        {data.event_count}
       </h3>
 
-      <h4>Top Pages</h4>
+      <div className="top-pages">
 
-      <ul>
-        {data.top_pages.map((page, index) => (
-          <li key={index}>
-            {page.payload__page}
-            {' '}
-            -
-            {' '}
-            {page.view_count}
-            {' '}
-            views
-          </li>
-        ))}
-      </ul>
+        <h4>
+          Top Pages
+        </h4>
+
+        <ul>
+
+          {data.top_pages.map(
+            (page, index) => (
+
+              <li key={index}>
+
+                {page.payload__page}
+
+                {' '}
+                -
+
+                {' '}
+                {page.view_count}
+
+                {' '}
+                views
+
+              </li>
+            )
+          )}
+
+        </ul>
+        <PageViewsChart
+          data={data.top_pages}
+        />
+
+      </div>
 
     </div>
   );

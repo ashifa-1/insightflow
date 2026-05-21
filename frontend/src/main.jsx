@@ -1,4 +1,6 @@
+import './App.css';
 import React from 'react';
+import { AuthProvider } from './features/auth/AuthContext';
 import ReactDOM from 'react-dom/client';
 import {
   QueryClient,
@@ -12,7 +14,9 @@ ReactDOM.createRoot(
 ).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <App />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </QueryClientProvider>
   </React.StrictMode>
 );
