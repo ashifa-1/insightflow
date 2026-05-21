@@ -266,50 +266,6 @@ More storage -> Faster query performance
 
 ---
 
-# Challenges Faced During Development
-
-## Circular Imports
-
-Resolved by extracting thread-local tenant logic into:
-
-```text
-tenant_context.py
-```
-
----
-
-## Migration Conflicts
-
-Handled migration reconciliation between:
-
-* seeded database tables
-* Django migration state
-* unmanaged models
-
----
-
-## Schema Switching
-
-Implemented manual PostgreSQL:
-
-```sql
-SET search_path
-```
-
-because Django does not provide built-in schema switching methods.
-
----
-
-## Docker Networking & Startup Dependencies
-
-Configured:
-
-* PostgreSQL startup synchronization
-* Redis container communication
-* Docker networking
-
----
-
 # How to Run the Project
 
 ## Clone Repository
