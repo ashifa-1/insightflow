@@ -19,7 +19,8 @@ from .models import (
 )
 
 from .serializers import (
-    WorkspaceSerializer
+    WorkspaceSerializer,
+    EventCreateSerializer
 )
 
 class DashboardSummaryView(APIView):
@@ -113,6 +114,11 @@ class WorkspaceListCreateView(
             )
 
         slug = slugify(name)
+        if Workspace.objects.filter(slug=slug).exists():
+            return Response(
+                {"error": "Workspace already exists"},
+                status=400
+            )
 
         workspace = Workspace.objects.create(
             name=name,
@@ -160,6 +166,52 @@ class CurrentUserView(APIView):
             "email": request.user.email,
         })
 
+class EventIngestView(APIView):
+
+    permission_classes = [
+        IsAuthenticated,
+        IsWorkspaceMember
+    ]
+
+    def post(
+        self,
+        request,
+        workspace_slug
+    ):
+
+        serializer = (
+            EventCreateSerializer(
+                data=request.data
+            )
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+        workspace = get_object_or_404(
+            Workspace,
+            slug=workspace_slug
+        )
+
+        event = Event.objects.create(
+            workspace=workspace,
+            event_name=serializer.validated_data[
+                "event"
+            ],
+            payload=serializer.validated_data[
+                "payload"
+            ]
+        )
+
+        return Response(
+            {
+                "id": event.id,
+                "message":
+                "Event created"
+            },
+            status=201
+        )
 
 class LogoutView(APIView):
 

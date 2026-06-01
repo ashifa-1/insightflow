@@ -6,6 +6,11 @@ from .models import (
     WorkspaceMembership
 )
 
+class EventCreateSerializer(serializers.Serializer):
+    event = serializers.CharField()
+    payload = serializers.JSONField()
+
+
 class WorkspaceSerializer(serializers.ModelSerializer):
 
     class Meta:

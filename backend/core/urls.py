@@ -6,6 +6,7 @@ from .views import (
     CurrentUserView,
     LogoutView,
     WorkspaceListCreateView,
+    EventIngestView
 )
 urlpatterns = [
     path(
@@ -31,5 +32,10 @@ urlpatterns = [
     path(
         'auth/<str:provider>/',
         OAuthLoginView.as_view(),
+    ),
+
+    path(
+        'w/<slug:workspace_slug>/events/',
+        EventIngestView.as_view(),
     ),
 ]
