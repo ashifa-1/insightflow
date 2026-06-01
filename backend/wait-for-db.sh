@@ -1,12 +1,9 @@
 #!/bin/sh
-
-while ! nc -z postgres 5432; do
-  echo "Waiting for PostgreSQL..."
-  sleep 1
+echo "Waiting for PostgreSQL..."
+until python manage.py migrate --check >/dev/null 2>&1
+do
+  sleep 2
 done
-
-echo "PostgreSQL started"
-
+echo "Database ready"
 python manage.py migrate
-
 python manage.py runserver 0.0.0.0:8000

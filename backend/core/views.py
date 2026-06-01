@@ -2,18 +2,32 @@ from django.db.models import Count
 from django.core.cache import cache
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
-
+from django.contrib.auth import logout
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
-
-from .models import Workspace, Event
+from rest_framework.permissions import (
+    AllowAny,
+    IsAuthenticated
+)
 from .permissions import IsWorkspaceMember
+from django.utils.text import slugify
 
+from .models import (
+    Workspace,
+    Event,
+    WorkspaceMembership
+)
+
+from .serializers import (
+    WorkspaceSerializer
+)
 
 class DashboardSummaryView(APIView):
 
-    permission_classes = [AllowAny]
+    permission_classes = [
+        IsAuthenticated,
+        IsWorkspaceMember
+    ]
 
     def get(self, request, workspace_slug):
 
@@ -62,6 +76,65 @@ class DashboardSummaryView(APIView):
 
         return Response(data)
 
+class WorkspaceListCreateView(
+    APIView
+):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def get(self, request):
+
+        workspaces = Workspace.objects.filter(
+            memberships__user=request.user
+        ).distinct()
+
+        serializer = WorkspaceSerializer(
+            workspaces,
+            many=True
+        )
+
+        return Response(
+            serializer.data
+        )
+
+    def post(self, request):
+
+        name = request.data.get("name")
+
+        if not name:
+            return Response(
+                {
+                    "error":
+                    "Workspace name required"
+                },
+                status=400
+            )
+
+        slug = slugify(name)
+
+        workspace = Workspace.objects.create(
+            name=name,
+            slug=slug,
+            owner=request.user
+        )
+
+        WorkspaceMembership.objects.create(
+            user=request.user,
+            workspace=workspace,
+            role="admin"
+        )
+
+        serializer = WorkspaceSerializer(
+            workspace
+        )
+
+        return Response(
+            serializer.data,
+            status=201
+        )
+
 class OAuthLoginView(APIView):
 
     permission_classes = [AllowAny]
@@ -70,4 +143,34 @@ class OAuthLoginView(APIView):
 
         return Response({
             'message': f'{provider} OAuth initiated'
+        })
+
+
+class CurrentUserView(APIView):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def get(self, request):
+
+        return Response({
+            "id": request.user.id,
+            "username": request.user.username,
+            "email": request.user.email,
+        })
+
+
+class LogoutView(APIView):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def post(self, request):
+
+        logout(request)
+
+        return Response({
+            "message": "Logged out successfully"
         })
