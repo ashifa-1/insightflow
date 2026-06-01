@@ -6,7 +6,8 @@ from .views import (
     CurrentUserView,
     LogoutView,
     WorkspaceListCreateView,
-    EventIngestView
+    EventIngestView,
+    DashboardTimeseriesView
 )
 urlpatterns = [
     path(
@@ -27,6 +28,11 @@ urlpatterns = [
     path(
         'workspaces/',
         WorkspaceListCreateView.as_view(),
+    ),
+
+    path(
+        'w/<slug:workspace_slug>/dashboard/timeseries/',
+        DashboardTimeseriesView.as_view(),
     ),
 
     path(

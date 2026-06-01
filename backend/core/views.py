@@ -5,10 +5,14 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import logout
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.db.models.functions import TruncDate
 from rest_framework.permissions import (
     AllowAny,
     IsAuthenticated
 )
+from django.db.models.functions import TruncDate
+from django.utils import timezone
+from datetime import timedelta
 from .permissions import IsWorkspaceMember
 from django.utils.text import slugify
 
@@ -211,6 +215,61 @@ class EventIngestView(APIView):
                 "Event created"
             },
             status=201
+        )
+
+class DashboardTimeseriesView(APIView):
+
+    permission_classes = [
+        IsAuthenticated,
+        IsWorkspaceMember
+    ]
+
+    def get(
+        self,
+        request,
+        workspace_slug
+    ):
+
+        workspace = get_object_or_404(
+            Workspace,
+            slug=workspace_slug
+        )
+
+        period = request.GET.get(
+            "period",
+            "7d"
+        )
+
+        days = 7
+
+        if period == "30d":
+            days = 30
+
+        start_date = (
+            timezone.now()
+            - timedelta(days=days)
+        )
+
+        data = (
+            Event.objects
+            .filter(
+                workspace=workspace,
+                created_at__gte=start_date
+            )
+            .annotate(
+                date=TruncDate(
+                    "created_at"
+                )
+            )
+            .values("date")
+            .annotate(
+                count=Count("id")
+            )
+            .order_by("date")
+        )
+
+        return Response(
+            list(data)
         )
 
 class LogoutView(APIView):
