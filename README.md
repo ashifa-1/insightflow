@@ -1,4 +1,4 @@
-# InsightFlow
+# InsightFlow (Multi-Tenant Analytics Dashboard with OAuth, Django, React, Redis, and PostgreSQL)
 
 InsightFlow is a multi-tenant analytics platform built with Django REST Framework, React, PostgreSQL, Redis, and Docker. It allows authenticated users to manage workspaces, ingest analytics events, and view aggregated dashboard insights.
 
