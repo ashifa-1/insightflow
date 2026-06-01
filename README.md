@@ -1,311 +1,211 @@
 # InsightFlow
 
-InsightFlow is a full-stack multi-tenant analytics dashboard built using Django, React, PostgreSQL, Redis, and Docker.
+InsightFlow is a multi-tenant analytics platform built with Django REST Framework, React, PostgreSQL, Redis, and Docker. It allows authenticated users to manage workspaces, ingest analytics events, and view aggregated dashboard insights.
 
-The project demonstrates how modern SaaS applications handle:
-- workspace-based multi-tenancy
-- analytics event tracking
-- dashboard aggregation
-- Redis caching
-- protected frontend routes
-- scalable frontend/backend communication
-- containerized infrastructure
+## Features
 
-This project was built as a production-style SaaS analytics platform inspired by tools like Mixpanel, PostHog, and Plausible.
+### Authentication
 
----
+* Session-based authentication
+* Current user endpoint (`/api/auth/me/`)
+* Logout endpoint (`/api/auth/logout/`)
+* Protected frontend routes
 
-# Features
+### Multi-Tenant Workspaces
 
-## Authentication
-- OAuth-ready authentication flow
-- Protected frontend routes
-- Login state management using React Context
+* Create workspaces
+* List user workspaces
+* Workspace membership-based access control
+* Workspace data isolation
 
-## Multi-Tenancy
-- Workspace-based tenant isolation
-- Workspace-specific analytics
-- Dynamic workspace switching
-- Tenant-aware API architecture
+### Analytics
 
-## Analytics Dashboard
-- Total event tracking
-- Top pages aggregation
-- Workspace analytics visualization
-- Time-series-ready architecture
+* Event ingestion API
+* Dashboard summary API
+* Dashboard timeseries API
+* Top pages aggregation
+* Event count tracking
 
-## Backend Features
-- Django REST Framework APIs
-- PostgreSQL relational modeling
-- Redis caching integration
-- Optimized aggregation queries
-- Workspace membership permissions
+### Performance
 
-## Frontend Features
-- React Router protected routes
-- React Query server-state management
-- Axios API integration
-- Recharts analytics visualization
-- Reusable component structure
+* Redis caching for dashboard summaries
+* Automatic cache invalidation when new events are created
 
-## Infrastructure
-- Dockerized backend
-- Dockerized frontend
-- PostgreSQL container
-- Redis container
-- Docker Compose orchestration
+### Infrastructure
+
+* Dockerized frontend and backend
+* PostgreSQL database
+* Redis cache
+* Environment-based configuration
 
 ---
 
-# Tech Stack
+## Tech Stack
 
-## Backend
-- Django
-- Django REST Framework
-- PostgreSQL
-- Redis
-- django-redis
+### Backend
 
-## Frontend
-- React
-- React Router
-- React Query
-- Axios
-- Recharts
-- Vite
+* Django 5
+* Django REST Framework
+* PostgreSQL
+* Redis
+* Docker
 
-## DevOps
-- Docker
-- Docker Compose
+### Frontend
+
+* React
+* React Router
+* React Query
+* Vite
 
 ---
 
-# System Architecture
+## Architecture
 
-The application follows a modern full-stack SaaS architecture:
-
-Frontend (React SPA)
-↓
-Django REST API
-↓
-PostgreSQL + Redis
-
-### Architecture Flow
-
-- React handles the user interface and routing
-- Django REST Framework exposes API endpoints
-- PostgreSQL stores workspace and analytics data
-- Redis caches expensive analytics queries
-- Docker manages the entire application stack
+1. Users authenticate and access the React frontend.
+2. The frontend communicates with Django REST APIs.
+3. Workspace-level permissions ensure tenant isolation.
+4. Analytics events are stored in PostgreSQL.
+5. Dashboard queries are cached in Redis.
+6. Cache entries are invalidated when new events are ingested.
 
 ---
 
-# Screenshots
+## API Endpoints
 
-## Login Page
+### Authentication
 
-![Login Page](./screenshots/loginpage.png)
+#### Get Current User
 
----
+```http
+GET /api/auth/me/
+```
 
-## InsightFlow Workspace Dashboard
+#### Logout
 
-![InsightFlow Dashboard](./screenshots/dashboard_insightflow.png)
-
----
-
-## Acme Workspace Dashboard
-
-![Acme Dashboard](./screenshots/dashboard_acme.png)
-
----
-
-## Docker Containers Running
-
-![Docker Containers](./screenshots/docker_containers.png)
-
----
-
-# Multi-Tenant Architecture
-
-Each workspace acts as an isolated tenant.
-
-All analytics events are associated with a specific workspace, ensuring tenant-level data isolation.
-
-Workspace-specific API endpoints:
-
-```bash
-GET /api/w/<workspace_slug>/dashboard/summary/
-````
-
-The frontend dynamically switches workspaces and automatically reloads analytics data using React Query query keys.
-
----
-
-# Redis Caching
-
-Dashboard summary responses are cached using Redis.
-
-### Cache Strategy
-
-* Cache key is workspace-specific
-* Expensive aggregation queries are cached
-* Cached summaries reduce database load
-* Cache timeout is set to 15 minutes
-
-Example cache key:
-
-```bash
-workspaces:{workspace_id}:dashboard_summary
+```http
+POST /api/auth/logout/
 ```
 
 ---
 
-# Analytics Features
+### Workspaces
 
-The dashboard visualizes:
+#### List Workspaces
 
-* total events
-* top pages
-* page view analytics
-* workspace-specific activity
+```http
+GET /api/workspaces/
+```
 
-Charts are implemented using Recharts.
+#### Create Workspace
 
----
+```http
+POST /api/workspaces/
+```
 
-# Dockerized Infrastructure
+Example Request:
 
-The project uses Docker Compose to orchestrate:
-
-* frontend container
-* backend container
-* PostgreSQL container
-* Redis container
-
-This provides:
-
-* isolated development environments
-* reproducible builds
-* simplified setup process
-
----
-
-# Project Structure
-
-```bash
-insightflow/
-│
-├── backend/
-├── frontend/
-├── screenshots/
-├── docker-compose.yml
-├── .env.example
-├── README.md
+```json
+{
+  "name": "Acme Corp"
+}
 ```
 
 ---
 
-# Environment Variables
+### Analytics
 
-Example `.env` configuration:
+#### Dashboard Summary
 
-```env
-DEBUG=True
+```http
+GET /api/w/{workspace_slug}/dashboard/summary/
+```
 
-SECRET_KEY=your-secret-key
+Returns:
 
-POSTGRES_DB=insightflow_db
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_HOST=postgres
-POSTGRES_PORT=5432
+* Total event count
+* Top pages by page views
 
-REDIS_URL=redis://redis:6379/1
+#### Dashboard Timeseries
+
+```http
+GET /api/w/{workspace_slug}/dashboard/timeseries/
+```
+
+Optional query parameter:
+
+```http
+?period=30d
+```
+
+#### Event Ingestion
+
+```http
+POST /api/w/{workspace_slug}/events/
+```
+
+Example Request:
+
+```json
+{
+  "event": "page_view",
+  "payload": {
+    "page": "/pricing"
+  }
+}
 ```
 
 ---
 
-# Installation and Setup
+## Running the Project
 
-## Clone Repository
+### Clone Repository
 
 ```bash
 git clone https://github.com/ashifa-1/insightflow
 cd insightflow
 ```
 
----
+### Configure Environment Variables
 
-## Start Application
+Create a `.env` file using `.env.example`.
+
+### Start Services
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
----
+### Backend
 
-## Backend URL
+Available at:
 
-```bash
+```text
 http://localhost:8000
 ```
 
----
+### Frontend
 
-## Frontend URL
+Available at:
 
-```bash
+```text
 http://localhost:5173
 ```
 
 ---
 
-# Running Migrations
+## Security
 
-```bash
-docker-compose exec backend python manage.py migrate
-```
-
----
-
-# Create Superuser
-
-```bash
-docker-compose exec backend python manage.py createsuperuser
-```
+* Workspace-level authorization using custom permissions
+* Authenticated access to analytics endpoints
+* Multi-tenant data isolation
+* Session-based authentication
 
 ---
 
-# Access Django Admin
+## Future Improvements
 
-```bash
-http://localhost:8000/admin
-```
-
----
-
-# API Endpoints
-
-## Dashboard Summary
-
-```bash
-GET /api/w/<workspace_slug>/dashboard/summary/
-```
-
----
-
-## OAuth Simulation Endpoints
-
-```bash
-GET /api/auth/google/
-GET /api/auth/github/
-```
-
----
-
-# Outcome
-
-InsightFlow demonstrates a scalable multi-tenant analytics platform using modern full-stack technologies and production-style infrastructure patterns.
-
-The project combines backend engineering, frontend architecture, caching strategies, analytics visualization, and containerized infrastructure into a complete SaaS-style application.
+* Google OAuth Login
+* GitHub OAuth Login
+* Advanced analytics dashboards
+* Real-time event streaming
+* Role-based workspace permissions
